@@ -11,7 +11,6 @@ export default class TicketService {
   #nrInfantTicketsRequested = 0;
 
   purchaseTickets(accountId, ...ticketTypeRequests) {
-    console.log("hELLO AGAIN");
     if (
       this.#isValidAccountId(accountId) &&
       this.#areValidTicketTypeRequests(ticketTypeRequests)
@@ -48,7 +47,6 @@ export default class TicketService {
 
   #getTicketTypeQuantitiesRequested(ticketTypeRequests) {
     ticketTypeRequests.forEach((ticket) => {
-      console.log("Hello knobby");
       const ticketType = ticket.getTicketType();
       switch (ticketType) {
         case "ADULT":
@@ -62,7 +60,6 @@ export default class TicketService {
           break;
       }
 
-      console.log("Num Adult tickets" + this.#nrAdultTicketsRequested);
     });
   }
 
