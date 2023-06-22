@@ -1,5 +1,5 @@
-import TicketTypeRequest from './lib/TicketTypeRequest.js';
-import InvalidPurchaseException from './lib/InvalidPurchaseException.js';
+import TicketTypeRequest from "./lib/TicketTypeRequest.js";
+import InvalidPurchaseException from "./lib/InvalidPurchaseException.js";
 
 export default class TicketService {
   /**
@@ -7,15 +7,30 @@ export default class TicketService {
    */
 
   purchaseTickets(accountId, ...ticketTypeRequests) {
-    if (this.#isValidAccountId(accountId))
-
-    return true
+    if (
+      this.#isValidAccountId(accountId) &&
+      this.#areValidTicketTypeRequests(ticketTypeRequests)
+    ) {
+      return true;
+    }
   }
 
-  #isValidAccountId(accountId){
-    if(typeof(accountId) != 'number' || accountId <= 0){
-      throw new InvalidPurchaseException('accountID must be a number greater than zero')
+  #isValidAccountId(accountId) {
+    if (typeof accountId != "number" || accountId <= 0) {
+      throw new InvalidPurchaseException(
+        "accountId must be a number greater than zero"
+      );
     }
-    return true
+    return true;
+  }
+
+  #areValidTicketTypeRequests(ticketTypeRequests) {
+    ticketTypeRequests.forEach((ticket) => {
+      if (!(ticket instanceof TicketTypeRequest)) {
+        throw new InvalidPurchaseException(
+          "Ticket request object must be an instance of ticketTypeRequest"
+        );
+      }
+    });
   }
 }
