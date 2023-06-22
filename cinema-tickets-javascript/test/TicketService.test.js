@@ -1,14 +1,10 @@
 import TicketService from "../src/pairtest/TicketService";
 import InvalidPurchaseException from "../src/pairtest/lib/InvalidPurchaseException";
 import TicketTypeRequest from "../src/pairtest/lib/TicketTypeRequest";
-import TicketPaymentService from "../src/thirdparty/paymentgateway/TicketPaymentService";
-import SeatReservationService from "../src/thirdparty/seatbooking/SeatReservationService";
-
-
 
 const adultTicketRequest = new TicketTypeRequest("ADULT", 5);
 const infantTicketRequest = new TicketTypeRequest("INFANT", 2);
-const childTicketRequest = new TicketTypeRequest("CHILD", 6)
+const childTicketRequest = new TicketTypeRequest("CHILD", 6);
 const largeAdultTicketRequest = new TicketTypeRequest("ADULT", 19);
 const largeInfantTicketRequest = new TicketTypeRequest("INFANT", 6);
 const invalidticketRequest = ("CHILD", 6);
@@ -62,9 +58,9 @@ describe("validation of ticketTypeRequests", () => {
         invalidticketRequest
       );
     }).toThrow(InvalidPurchaseException);
-  })
+  });
 
-  test('error thrown if number of tickets requested is not between 1 and 20', ()=>{
+  test("error thrown if number of tickets requested is not between 1 and 20", () => {
     const ticketService = new TicketService();
     expect(() => {
       ticketService.purchaseTickets(
@@ -74,9 +70,9 @@ describe("validation of ticketTypeRequests", () => {
         largeAdultTicketRequest
       );
     }).toThrow(InvalidPurchaseException);
-  })
+  });
 
-  test('no error thrown if number of tickets is between 1 and 20', () =>{
+  test("no error thrown if number of tickets is between 1 and 20", () => {
     const ticketService = new TicketService();
     expect(() => {
       ticketService.purchaseTickets(
@@ -86,9 +82,9 @@ describe("validation of ticketTypeRequests", () => {
         childTicketRequest
       );
     }).not.toThrow(InvalidPurchaseException);
-  })
+  });
 
-  test('error thrown if no adult ticket requested', ()=>{
+  test("error thrown if no adult ticket requested", () => {
     const ticketService = new TicketService();
     expect(() => {
       ticketService.purchaseTickets(
@@ -97,9 +93,9 @@ describe("validation of ticketTypeRequests", () => {
         childTicketRequest
       );
     }).toThrow(InvalidPurchaseException);
-  })
+  });
 
-  test ('error thrown if number of infants exceeds number of adults', () =>{
+  test("error thrown if number of infants exceeds number of adults", () => {
     const ticketService = new TicketService();
     expect(() => {
       ticketService.purchaseTickets(
@@ -109,9 +105,23 @@ describe("validation of ticketTypeRequests", () => {
         childTicketRequest
       );
     }).toThrow(InvalidPurchaseException);
-  })
-
-  
-
+  });
 });
 
+describe("calculate seat reservations and costs", () => {
+  const ticketService = new TicketService();
+  const ticketPurchase = ticketService.purchaseTickets(
+    123,
+    adultTicketRequest,
+    infantTicketRequest,
+    childTicketRequest
+  );
+  console.log(ticketPurchase);
+  test("calculate number of seats to book", () => {
+    expect(ticketPurchase.nrOfSeatsReserved).toBe(11);
+  });
+
+  test("calculate cost of tickets", () => {
+    expect(ticketPurchase.totalTicketCostInPounds).toBe(160);
+  });
+});

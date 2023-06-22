@@ -1,6 +1,7 @@
 import TicketTypeRequest from "./lib/TicketTypeRequest.js";
 import InvalidPurchaseException from "./lib/InvalidPurchaseException.js";
 import TicketPaymentService from "../thirdparty/paymentgateway/TicketPaymentService.js";
+import SeatReservationService from "../thirdparty/seatbooking/SeatReservationService.js";
 
 export default class TicketService {
   /**
@@ -10,19 +11,38 @@ export default class TicketService {
   #nrChildTicketsRequested = 0;
   #nrInfantTicketsRequested = 0;
 
+  #ticketTypeCostsInPence = { ADULT: 2000, CHILD: 1000, INFANT: 0 };
+
   purchaseTickets(accountId, ...ticketTypeRequests) {
-    if (
-      this.#isValidAccountId(accountId) &&
-      this.#areValidTicketTypeRequests(ticketTypeRequests)
-    ) {
-      this.#getTicketTypeQuantitiesRequested(ticketTypeRequests);
-      this.#validateTicketTypeQuantitiesRequested();
 
-      const ticketPaymentService = new TicketPaymentService();
-      ticketPaymentService.makePayment(123, 1000);
+    const ticketBooking = {
+      nrAdultTickets: 0,
+      nrChildTickets: 0,
+      nrInfantTickets: 0,
+      nrOfSeatsReserved: 0,
+    };
 
-      return true;
-    }
+    this.#isValidAccountId(accountId);
+    this.#areValidTicketTypeRequests(ticketTypeRequests);
+    this.#getTicketTypeQuantitiesRequested(ticketTypeRequests);
+    this.#validateTicketTypeQuantitiesRequested();
+
+    const nrOfSeatsRequested = this.#getNrOfSeatsRequested();
+    const totalTicketCostInPounds = this.#getTotalTicketCostInPounds();
+
+    const seatReservationService = new SeatReservationService();
+    seatReservationService.reserveSeat(accountId, nrOfSeatsRequested);
+
+    const ticketPaymentService = new TicketPaymentService();
+    ticketPaymentService.makePayment(accountId, totalTicketCostInPounds);
+
+    ticketBooking.nrOfSeatsReserved = nrOfSeatsRequested;
+    ticketBooking.nrAdultTickets = this.#nrAdultTicketsRequested;
+    ticketBooking.nrChildTickets = this.#nrChildTicketsRequested;
+    ticketBooking.nrInfantTickets = this.#nrInfantTicketsRequested;
+    ticketBooking.totalTicketCostInPounds = totalTicketCostInPounds;
+
+    return ticketBooking;
   }
 
   #isValidAccountId(accountId) {
@@ -59,7 +79,6 @@ export default class TicketService {
           this.#nrInfantTicketsRequested += ticket.getNoOfTickets();
           break;
       }
-
     });
   }
 
@@ -75,16 +94,30 @@ export default class TicketService {
       );
     }
 
-    if ((this.#nrAdultTicketsRequested === 0)) {
+    if (this.#nrAdultTicketsRequested === 0) {
       throw new InvalidPurchaseException(
         "You must buy at least one adult ticket to purchase child or infant tickets"
       );
     }
 
-    if ((this.#nrInfantTicketsRequested > this. #nrAdultTicketsRequested)){
+    if (this.#nrInfantTicketsRequested > this.#nrAdultTicketsRequested) {
       throw new InvalidPurchaseException(
         "You must buy at least one adult ticket for each infant ticket"
       );
     }
+  }
+
+  #getNrOfSeatsRequested() {
+    const numberOfSeatsRequested =
+      this.#nrAdultTicketsRequested + this.#nrChildTicketsRequested;
+    return numberOfSeatsRequested;
+  }
+
+  #getTotalTicketCostInPounds() {
+    const totalTicketCost =
+      (this.#nrAdultTicketsRequested * this.#ticketTypeCostsInPence["ADULT"] +
+        this.#nrChildTicketsRequested * this.#ticketTypeCostsInPence["CHILD"]) /
+      100;
+    return totalTicketCost;
   }
 }
