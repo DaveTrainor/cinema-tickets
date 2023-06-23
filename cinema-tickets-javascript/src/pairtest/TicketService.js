@@ -7,6 +7,7 @@ export default class TicketService {
   /**
    * Should only have private methods other than the one below.
    */
+
   #nrAdultTicketsRequested = 0;
   #nrChildTicketsRequested = 0;
   #nrInfantTicketsRequested = 0;
@@ -14,14 +15,6 @@ export default class TicketService {
   #ticketTypeCostsInPence = { ADULT: 2000, CHILD: 1000, INFANT: 0 };
 
   purchaseTickets(accountId, ...ticketTypeRequests) {
-
-    const ticketBooking = {
-      nrAdultTickets: 0,
-      nrChildTickets: 0,
-      nrInfantTickets: 0,
-      nrOfSeatsReserved: 0,
-    };
-
     this.#isValidAccountId(accountId);
     this.#areValidTicketTypeRequests(ticketTypeRequests);
     this.#getTicketTypeQuantitiesRequested(ticketTypeRequests);
@@ -30,12 +23,11 @@ export default class TicketService {
     const nrOfSeatsRequested = this.#getNrOfSeatsRequested();
     const totalTicketCostInPounds = this.#getTotalTicketCostInPounds();
 
-    const seatReservationService = new SeatReservationService();
-    seatReservationService.reserveSeat(accountId, nrOfSeatsRequested);
+    this.#makePayment(accountId, totalTicketCostInPounds);
+    this.#reserveSeats(accountId, nrOfSeatsRequested);
 
-    const ticketPaymentService = new TicketPaymentService();
-    ticketPaymentService.makePayment(accountId, totalTicketCostInPounds);
-
+    const ticketBooking = {};
+    ticketBooking.accountId = accountId;
     ticketBooking.nrOfSeatsReserved = nrOfSeatsRequested;
     ticketBooking.nrAdultTickets = this.#nrAdultTicketsRequested;
     ticketBooking.nrChildTickets = this.#nrChildTicketsRequested;
@@ -51,7 +43,6 @@ export default class TicketService {
         "accountId must be a number greater than zero"
       );
     }
-    return true;
   }
 
   #areValidTicketTypeRequests(ticketTypeRequests) {
@@ -62,7 +53,6 @@ export default class TicketService {
         );
       }
     });
-    return true;
   }
 
   #getTicketTypeQuantitiesRequested(ticketTypeRequests) {
@@ -119,5 +109,15 @@ export default class TicketService {
         this.#nrChildTicketsRequested * this.#ticketTypeCostsInPence["CHILD"]) /
       100;
     return totalTicketCost;
+  }
+
+  #makePayment(accountId, totalTicketCostInPounds) {
+    const ticketPaymentService = new TicketPaymentService();
+    ticketPaymentService.makePayment(accountId, totalTicketCostInPounds);
+  }
+
+  #reserveSeats(accountId, nrOfSeatsRequested) {
+    const seatReservationService = new SeatReservationService();
+    seatReservationService.reserveSeat(accountId, nrOfSeatsRequested);
   }
 }
